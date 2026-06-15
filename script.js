@@ -34,6 +34,26 @@ const classificationElements = {
 };
 
 // ============================================
+// CHARTS & ANALYTICS TRACKING
+// ============================================
+
+const chartData = {
+    threatCounts: {
+        phishing: 0,
+        malware: 0,
+        spoofing: 0,
+        spam: 0,
+        suspicious: 0
+    },
+    riskScores: [],
+    timestamps: [],
+    lastAnalysis: null
+};
+
+let threatDistributionChart = null;
+let riskScoreTrendChart = null;
+
+// ============================================
 // THREAT CLASSIFICATION ENGINE
 // ============================================
 
@@ -255,12 +275,18 @@ function initializeDOMElements() {
     threatsList = document.getElementById('threatsList');
     recommendationsList = document.getElementById('recommendationsList');
 
-    // Attach event listener
+    // Attach event listener for form submission
     if (emailForm) {
         emailForm.addEventListener('submit', (e) => {
             e.preventDefault();
             analyzeEmail();
         });
+    }
+
+    // Attach event listener for clear history button
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', clearScanHistory);
     }
 }
 
@@ -417,6 +443,12 @@ function displayResults(analysisResult) {
 
     // Update Dashboard Statistics
     updateDashboardStatistics(riskLevel);
+
+    // Save scan to history
+    saveScanToHistory(analysisResult);
+
+    // Update charts with new analysis
+    updateCharts(analysisResult);
 
     // Show results container
     resultsContainer.style.display = 'grid';
@@ -700,6 +732,92 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // INITIALIZATION & DEMO
 // ============================================
 
+// Scan History Storage
+let scanHistory = [];
+
+// Load scan history from localStorage
+function loadScanHistory() {
+    const stored = localStorage.getItem('guardmailScanHistory');
+    if (stored) {
+        try {
+            scanHistory = JSON.parse(stored);
+        } catch (e) {
+            scanHistory = [];
+        }
+    }
+    displayScanHistory();
+}
+
+// Save scan history to localStorage
+function saveScanToHistory(analysisResult) {
+    const timestamp = new Date().toLocaleString();
+    const { score, riskLevel, classification } = analysisResult;
+
+    const historyItem = {
+        id: Date.now(),
+        timestamp: timestamp,
+        riskScore: Math.round(score),
+        riskLevel: riskLevel,
+        threatCategory: classification.classification,
+        confidenceScore: Math.round(classification.confidenceScore)
+    };
+
+    // Add to beginning of array (most recent first)
+    scanHistory.unshift(historyItem);
+
+    // Limit history to 50 items
+    if (scanHistory.length > 50) {
+        scanHistory = scanHistory.slice(0, 50);
+    }
+
+    localStorage.setItem('guardmailScanHistory', JSON.stringify(scanHistory));
+    displayScanHistory();
+}
+
+// Display scan history in sidebar
+function displayScanHistory() {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+
+    if (scanHistory.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">No scans yet</div>';
+        return;
+    }
+
+    const historyHTML = scanHistory
+        .map(item => {
+            const riskIcon = {
+                low: '✓',
+                medium: '⚠️',
+                high: '🚨'
+            }[item.riskLevel] || '?';
+
+            return `
+                <div class="history-item" title="Risk Score: ${item.riskScore}%">
+                    <div class="history-item-timestamp">${item.timestamp}</div>
+                    <div class="history-item-risk ${item.riskLevel}">
+                        <span>${riskIcon}</span>
+                        <span>${item.riskScore}%</span>
+                    </div>
+                    <div class="history-item-category">${item.threatCategory}</div>
+                </div>
+            `;
+        })
+        .join('');
+
+    historyList.innerHTML = historyHTML;
+}
+
+// Clear all scan history
+function clearScanHistory() {
+    if (confirm('Are you sure you want to clear all scan history? This cannot be undone.')) {
+        scanHistory = [];
+        localStorage.removeItem('guardmailScanHistory');
+        displayScanHistory();
+        showNotification('Scan history cleared', 'success');
+    }
+}
+
 // Sample email for demonstration
 const sampleEmails = {
     safe: `Dear Valued Customer,
@@ -802,12 +920,310 @@ window.loadSampleEmail = function(type) {
     setTimeout(() => analyzeEmail(), 500);
 };
 
-// Initialize with fade-in animation
+// ============================================
+// CHARTS & ANALYTICS FUNCTIONS
+// ============================================
+
+function initializeCharts() {
+    // Initialize Threat Distribution Pie Chart
+    const threatCtx = document.getElementById('threatDistributionChart');
+    if (threatCtx && !threatDistributionChart) {
+        threatDistributionChart = new Chart(threatCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Phishing', 'Malware', 'Spoofing', 'Spam', 'Suspicious'],
+                datasets: [{
+                    data: [
+                        chartData.threatCounts.phishing,
+                        chartData.threatCounts.malware,
+                        chartData.threatCounts.spoofing,
+                        chartData.threatCounts.spam,
+                        chartData.threatCounts.suspicious
+                    ],
+                    backgroundColor: [
+                        '#ff6b6b',
+                        '#ff006e',
+                        '#ffa500',
+                        '#4ecdc4',
+                        '#95e1d3'
+                    ],
+                    borderColor: 'rgba(26, 31, 58, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return label + ': ' + value + ' threats';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize Risk Score Trend Chart
+    const trendCtx = document.getElementById('riskScoreTrendChart');
+    if (trendCtx && !riskScoreTrendChart) {
+        riskScoreTrendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.timestamps.slice(-10),
+                datasets: [{
+                    label: 'Risk Score (%)',
+                    data: chartData.riskScores.slice(-10),
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#00d4ff',
+                    pointBorderColor: '#ffffff',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#b0b8d4',
+                            font: { size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(10, 14, 39, 0.95)',
+                        titleColor: '#00d4ff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#00d4ff',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#b0b8d4'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#b0b8d4'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function updateCharts(analysisResult) {
+    const { score, riskLevel, detectedThreats } = analysisResult;
+
+    // Update threat counts based on detected threats
+    for (const threat of detectedThreats) {
+        if (chartData.threatCounts.hasOwnProperty(threat.category)) {
+            chartData.threatCounts[threat.category]++;
+        }
+    }
+
+    // Add risk score to trend
+    chartData.riskScores.push(Math.round(score));
+    const now = new Date().toLocaleTimeString();
+    chartData.timestamps.push(now);
+
+    // Keep only last 10 scores for trend chart
+    if (chartData.riskScores.length > 10) {
+        chartData.riskScores.shift();
+        chartData.timestamps.shift();
+    }
+
+    // Update charts
+    if (threatDistributionChart) {
+        threatDistributionChart.data.datasets[0].data = [
+            chartData.threatCounts.phishing,
+            chartData.threatCounts.malware,
+            chartData.threatCounts.spoofing,
+            chartData.threatCounts.spam,
+            chartData.threatCounts.suspicious
+        ];
+        threatDistributionChart.update('active');
+    }
+
+    if (riskScoreTrendChart) {
+        riskScoreTrendChart.data.labels = chartData.timestamps;
+        riskScoreTrendChart.data.datasets[0].data = chartData.riskScores;
+        riskScoreTrendChart.update('active');
+    }
+}
+
+// ============================================
+// PDF REPORT GENERATION
+// ============================================
+
+function generateSecurityReport(analysisResult) {
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+        showNotification('PDF library not loaded. Please refresh the page.', 'error');
+        return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let yPosition = 20;
+
+    // Set colors
+    const primaryColor = [0, 212, 255];
+    const dangerColor = [255, 51, 102];
+    const warningColor = [255, 170, 0];
+    const darkBg = [26, 31, 58];
+
+    // Header with background
+    doc.setFillColor(darkBg[0], darkBg[1], darkBg[2]);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+
+    // Title
+    doc.setTextColor(0, 212, 255);
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.text('🛡️ GUARDMAIL AI', margin, yPosition + 15);
+
+    // Subtitle
+    doc.setTextColor(176, 184, 212);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('Advanced Email Security Analysis Report', margin, yPosition + 25);
+
+    yPosition += 45;
+
+    // Report Info Section
+    doc.setTextColor(0, 212, 255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('REPORT INFORMATION', margin, yPosition);
+
+    yPosition += 8;
+    doc.setTextColor(176, 184, 212);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+
+    const reportDate = new Date().toLocaleString();
+    doc.text(`Date & Time: ${reportDate}`, margin, yPosition);
+    yPosition += 6;
+    doc.text(`Analysis ID: ${Date.now()}`, margin, yPosition);
+
+    yPosition += 12;
+
+    // Risk Assessment Section
+    doc.setTextColor(0, 212, 255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('RISK ASSESSMENT', margin, yPosition);
+
+    yPosition += 8;
+    doc.setTextColor(176, 184, 212);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+
+    // Risk Score with color
+    const { score, riskLevel, classification } = analysisResult;
+    const riskLevelText = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
+    const riskColor = riskLevel === 'high' ? dangerColor : riskLevel === 'medium' ? warningColor : [0, 255, 136];
+
+    doc.setTextColor(riskColor[0], riskColor[1], riskColor[2]);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Risk Score: ${Math.round(score)}% (${riskLevelText})`, margin, yPosition);
+
+    yPosition += 8;
+    doc.setTextColor(176, 184, 212);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Threat Category: ${classification.classification}`, margin, yPosition);
+    yPosition += 6;
+    doc.text(`Confidence Score: ${Math.round(classification.confidenceScore)}%`, margin, yPosition);
+
+    yPosition += 12;
+
+    // Threat Explanation Section
+    doc.setTextColor(0, 212, 255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('THREAT ANALYSIS', margin, yPosition);
+
+    yPosition += 8;
+    doc.setTextColor(176, 184, 212);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+
+    const explanationLines = doc.splitTextToSize(classification.explanation, pageWidth - 2 * margin);
+    doc.text(explanationLines, margin, yPosition);
+    yPosition += explanationLines.length * 5 + 4;
+
+    yPosition += 4;
+
+    // Security Recommendations Section
+    doc.setTextColor(0, 212, 255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('SECURITY RECOMMENDATIONS', margin, yPosition);
+
+    yPosition += 8;
+    doc.setTextColor(176, 184, 212);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+
+    const recommendations = recommendationsBase[riskLevel] || recommendationsBase.low;
+    for (const rec of recommendations) {
+        const recText = rec.replace(/^✓\s*/, '• ');
+        const recLines = doc.splitTextToSize(recText, pageWidth - 2 * margin - 5);
+        doc.text(recLines, margin + 5, yPosition);
+        yPosition += recLines.length * 4;
+    }
+
+    yPosition += 8;
+
+    // Footer
+    doc.setTextColor(122, 130, 150);
+    doc.setFontSize(8);
+    doc.text('GuardMail AI - Enterprise Email Security Solution', pageWidth / 2, pageHeight - 10, { align: 'center' });
+    doc.text(`Report generated: ${new Date().toISOString()}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+
+    // Save PDF
+    const filename = `GuardMail_Security_Report_${Date.now()}.pdf`;
+    doc.save(filename);
+
+    showNotification(`Security report downloaded: ${filename}`, 'success');
+}
+
+// ============================================
+// EVENT INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
     console.log('GuardMail AI - Email Threat Analyzer initialized');
     console.log('Features: Advanced phishing detection, malware analysis, and security recommendations');
     initializeDOMElements();
     initializeDashboard();
+    loadScanHistory();
 });
 
 // Add slideOutDown animation to stylesheet

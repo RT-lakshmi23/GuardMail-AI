@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuardMail AI - Advanced Email Security</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -108,27 +112,31 @@
             <h2 class="section-title">Email Threat Analyzer</h2>
             <p class="section-subtitle">Paste your email content below for instant security analysis</p>
 
-            <!-- Analysis Form -->
-            <div class="analyzer-card glass-effect">
-                <form id="emailForm" class="email-form">
-                    <div class="form-group">
-                        <label for="emailContent" class="form-label">Email Content</label>
-                        <textarea 
-                            id="emailContent" 
-                            class="email-textarea" 
-                            placeholder="Paste the email content here for analysis..."
-                            rows="8"
-                        ></textarea>
+            <!-- Analyzer Layout with History Sidebar -->
+            <div class="analyzer-layout">
+                <!-- Main Analyzer Column -->
+                <div class="analyzer-main">
+                    <!-- Analysis Form -->
+                    <div class="analyzer-card glass-effect">
+                        <form id="emailForm" class="email-form">
+                            <div class="form-group">
+                                <label for="emailContent" class="form-label">Email Content</label>
+                                <textarea 
+                                    id="emailContent" 
+                                    class="email-textarea" 
+                                    placeholder="Paste the email content here for analysis..."
+                                    rows="8"
+                                ></textarea>
+                            </div>
+                            <button type="submit" class="analyze-button">
+                                <span>Analyze Email</span>
+                                <span class="button-icon">→</span>
+                            </button>
+                        </form>
                     </div>
-                    <button type="submit" class="analyze-button">
-                        <span>Analyze Email</span>
-                        <span class="button-icon">→</span>
-                    </button>
-                </form>
-            </div>
 
-            <!-- Results Container -->
-            <div id="resultsContainer" class="results-container" style="display: none;">
+                    <!-- Results Container -->
+                    <div id="resultsContainer" class="results-container" style="display: none;">
                 <!-- Risk Score Card -->
                 <div class="result-card glass-effect risk-card">
                     <div class="risk-header">
@@ -185,6 +193,85 @@
                         <li>No additional recommendations needed</li>
                     </ul>
                 </div>
+            </div>
+                </div>
+
+                <!-- Scan History Sidebar -->
+                <div class="history-sidebar glass-effect">
+                    <div class="history-header">
+                        <h3>📋 Scan History</h3>
+                        <button id="clearHistoryBtn" class="clear-history-btn" title="Clear all history">
+                            <span>Clear</span>
+                        </button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="history-empty">No scans yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics & Charts Dashboard -->
+    <section class="analytics" id="analytics">
+        <div class="container">
+            <h2 class="section-title">Security Analytics Dashboard</h2>
+            <p class="section-subtitle">Visual insights into threat patterns and security trends</p>
+
+            <div class="analytics-grid">
+                <!-- Threat Distribution Pie Chart -->
+                <div class="chart-card glass-effect">
+                    <div class="chart-header">
+                        <h3>🎯 Threat Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="threatDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span class="legend-color phishing"></span>
+                            <span>Phishing</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color malware"></span>
+                            <span>Malware</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color spoofing"></span>
+                            <span>Spoofing</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color spam"></span>
+                            <span>Spam</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color suspicious"></span>
+                            <span>Suspicious</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Score Trend Chart -->
+                <div class="chart-card glass-effect">
+                    <div class="chart-header">
+                        <h3>📈 Risk Score Trend</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskScoreTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Report Section -->
+            <div class="report-section glass-effect">
+                <div class="report-header">
+                    <h3>📊 Security Report</h3>
+                    <p>Generate and download a comprehensive security analysis report</p>
+                </div>
+                <button id="downloadReportBtn" class="download-report-btn">
+                    <span>📥</span>
+                    <span>Download Security Report (PDF)</span>
+                </button>
             </div>
         </div>
     </section>
