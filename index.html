@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardMail AI - Advanced Email Security</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">GuardMail AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#analyzer" class="nav-link">Analyzer</a></li>
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1 class="hero-title">Advanced Email Security</h1>
+            <p class="hero-subtitle">Protect your organization from phishing, malware, and social engineering attacks with AI-powered threat detection.</p>
+            <a href="#analyzer" class="hero-button">Start Analyzing</a>
+        </div>
+        <div class="hero-background">
+            <div class="floating-orb orb-1"></div>
+            <div class="floating-orb orb-2"></div>
+            <div class="floating-orb orb-3"></div>
+        </div>
+    </section>
+
+    <!-- Email Analysis Section -->
+    <section class="analyzer" id="analyzer">
+        <div class="container">
+            <h2 class="section-title">Email Threat Analyzer</h2>
+            <p class="section-subtitle">Paste your email content below for instant security analysis</p>
+
+            <!-- Analysis Form -->
+            <div class="analyzer-card glass-effect">
+                <form id="emailForm" class="email-form">
+                    <div class="form-group">
+                        <label for="emailContent" class="form-label">Email Content</label>
+                        <textarea 
+                            id="emailContent" 
+                            class="email-textarea" 
+                            placeholder="Paste the email content here for analysis..."
+                            rows="8"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="analyze-button">
+                        <span>Analyze Email</span>
+                        <span class="button-icon">→</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Container -->
+            <div id="resultsContainer" class="results-container" style="display: none;">
+                <!-- Risk Score Card -->
+                <div class="result-card glass-effect risk-card">
+                    <div class="risk-header">
+                        <h3>Risk Score</h3>
+                        <span class="risk-badge" id="riskBadge">Safe</span>
+                    </div>
+                    <div class="risk-score-container">
+                        <div class="risk-circle" id="riskCircle">
+                            <span class="risk-percentage" id="riskPercentage">0</span>
+                            <span class="risk-label">%</span>
+                        </div>
+                    </div>
+                    <div class="risk-details" id="riskDetails">
+                        <p class="risk-description">Email appears safe</p>
+                    </div>
+                </div>
+
+                <!-- Threat Explanation Card -->
+                <div class="result-card glass-effect threat-card">
+                    <div class="card-header">
+                        <h3>🚨 Threat Analysis</h3>
+                    </div>
+                    <div class="threats-list" id="threatsList">
+                        <p class="no-threats">No threats detected</p>
+                    </div>
+                </div>
+
+                <!-- Security Recommendations Card -->
+                <div class="result-card glass-effect recommendations-card">
+                    <div class="card-header">
+                        <h3>✓ Security Recommendations</h3>
+                    </div>
+                    <ul class="recommendations-list" id="recommendationsList">
+                        <li>No additional recommendations needed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why GuardMail AI?</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Advanced Detection</h3>
+                    <p>AI-powered algorithms detect phishing attempts, malware, and suspicious patterns</p>
+                </div>
+
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Instant Analysis</h3>
+                    <p>Get real-time threat assessment in milliseconds with our advanced scanning engine</p>
+                </div>
+
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Enterprise Security</h3>
+                    <p>Enterprise-grade protection suitable for organizations of all sizes</p>
+                </div>
+
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">📊</div>
+                    <h3>Detailed Reports</h3>
+                    <p>Comprehensive threat analysis with actionable recommendations</p>
+                </div>
+
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Privacy First</h3>
+                    <p>Your data is encrypted and never stored. Complete privacy guaranteed</p>
+                </div>
+
+                <div class="feature-card glass-effect">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Accuracy</h3>
+                    <p>99.9% accuracy in threat detection with continuous model updates</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GuardMail AI</h4>
+                    <p>Advanced email security powered by artificial intelligence</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#analyzer">Analyzer</a></li>
+                        <li><a href="#features">Features</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                        <li><a href="#">GitHub</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 GuardMail AI. All rights reserved. | Protecting the digital frontier</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
