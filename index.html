@@ -16,6 +16,7 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
                 <li><a href="#analyzer" class="nav-link">Analyzer</a></li>
                 <li><a href="#features" class="nav-link">Features</a></li>
                 <li><a href="#contact" class="nav-link">Contact</a></li>
@@ -34,6 +35,70 @@
             <div class="floating-orb orb-1"></div>
             <div class="floating-orb orb-2"></div>
             <div class="floating-orb orb-3"></div>
+        </div>
+    </section>
+
+    <!-- Threat Intelligence Dashboard -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <h2 class="section-title">Threat Intelligence Dashboard</h2>
+            <p class="section-subtitle">Real-time security analytics and threat statistics</p>
+
+            <div class="dashboard-grid">
+                <!-- Total Emails Analyzed Card -->
+                <div class="dashboard-card glass-effect">
+                    <div class="card-header-dashboard">
+                        <div class="stat-icon">📧</div>
+                        <h3>Total Emails Analyzed</h3>
+                    </div>
+                    <div class="stat-display">
+                        <span class="stat-number" id="totalEmails">0</span>
+                        <span class="stat-unit">emails</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- High Risk Emails Card -->
+                <div class="dashboard-card glass-effect danger-theme">
+                    <div class="card-header-dashboard">
+                        <div class="stat-icon">🚨</div>
+                        <h3>High Risk Emails</h3>
+                    </div>
+                    <div class="stat-display">
+                        <span class="stat-number" id="highRiskCount">0</span>
+                        <span class="stat-percentage" id="highRiskPercent">0%</span>
+                    </div>
+                    <div class="stat-description">Critical threats detected</div>
+                </div>
+
+                <!-- Medium Risk Emails Card -->
+                <div class="dashboard-card glass-effect warning-theme">
+                    <div class="card-header-dashboard">
+                        <div class="stat-icon">⚠️</div>
+                        <h3>Medium Risk Emails</h3>
+                    </div>
+                    <div class="stat-display">
+                        <span class="stat-number" id="mediumRiskCount">0</span>
+                        <span class="stat-percentage" id="mediumRiskPercent">0%</span>
+                    </div>
+                    <div class="stat-description">Potential threats detected</div>
+                </div>
+
+                <!-- Safe Emails Card -->
+                <div class="dashboard-card glass-effect success-theme">
+                    <div class="card-header-dashboard">
+                        <div class="stat-icon">✅</div>
+                        <h3>Safe Emails</h3>
+                    </div>
+                    <div class="stat-display">
+                        <span class="stat-number" id="safeCount">0</span>
+                        <span class="stat-percentage" id="safePercent">0%</span>
+                    </div>
+                    <div class="stat-description">No threats detected</div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -78,6 +143,26 @@
                     </div>
                     <div class="risk-details" id="riskDetails">
                         <p class="risk-description">Email appears safe</p>
+                    </div>
+                </div>
+
+                <!-- Threat Classification Card -->
+                <div class="result-card glass-effect classification-card">
+                    <div class="card-header">
+                        <h3>🏷️ Threat Classification</h3>
+                    </div>
+                    <div class="classification-content" id="classificationContent">
+                        <div class="classification-type" id="classificationType">Analyzing...</div>
+                        <div class="classification-confidence">
+                            <span class="confidence-label">Confidence Score:</span>
+                            <div class="confidence-bar-container">
+                                <div class="confidence-bar" id="confidenceBar" style="width: 0%;"></div>
+                            </div>
+                            <span class="confidence-value" id="confidenceValue">0%</span>
+                        </div>
+                        <div class="classification-explanation" id="classificationExplanation">
+                            Analyzing email patterns...
+                        </div>
                     </div>
                 </div>
 

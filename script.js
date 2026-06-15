@@ -3,6 +3,169 @@
 // Advanced JavaScript Logic for Email Security
 // ============================================
 
+// ============================================
+// STATISTICS TRACKING
+// ============================================
+
+const statistics = {
+    totalEmails: 0,
+    highRiskCount: 0,
+    mediumRiskCount: 0,
+    safeCount: 0
+};
+
+// Dashboard DOM Elements
+const dashboardElements = {
+    totalEmails: null,
+    highRiskCount: null,
+    mediumRiskCount: null,
+    safeCount: null,
+    highRiskPercent: null,
+    mediumRiskPercent: null,
+    safePercent: null
+};
+
+// Classification DOM Elements
+const classificationElements = {
+    classificationType: null,
+    confidenceBar: null,
+    confidenceValue: null,
+    classificationExplanation: null
+};
+
+// ============================================
+// THREAT CLASSIFICATION ENGINE
+// ============================================
+
+const threatClassifications = {
+    credentialTheft: {
+        name: 'Credential Theft',
+        icon: '🔓',
+        keywords: [
+            /verify.*account|confirm.*password|update.*password|reset.*password/gi,
+            /confirm.*identity|validate.*account|activate.*account|unlock.*account/gi,
+            /urgent.*verify|immediately.*confirm|please.*provide.*password/gi,
+            /re-enter.*password|verify.*email|confirm.*email|update.*email/gi,
+            /security.*alert|suspicious.*activity|unusual.*activity.*detected/gi
+        ],
+        severity: 'high',
+        explanation: 'This email is attempting to steal user credentials by requesting password or account verification. This is a classic phishing tactic.'
+    },
+    bankingScam: {
+        name: 'Banking Scam',
+        icon: '💳',
+        keywords: [
+            /update.*banking|confirm.*banking|verify.*bank|banking.*information/gi,
+            /credit.*card|debit.*card|card.*verification|card.*security/gi,
+            /account.*compromised|account.*frozen|account.*suspended|urgent.*action.*required/gi,
+            /wire.*transfer|urgent.*transfer|transaction.*failed|verify.*payment/gi,
+            /banking.*details|financial.*information|routing.*number|account.*number/gi
+        ],
+        severity: 'high',
+        explanation: 'This email impersonates a financial institution and attempts to steal banking credentials or payment information. Extreme caution advised.'
+    },
+    rewardScam: {
+        name: 'Reward Scam',
+        icon: '🎁',
+        keywords: [
+            /congratulations.*won|claim.*prize|you.*won|lottery.*winner/gi,
+            /claim.*reward|collect.*reward|free.*money|free.*cash/gi,
+            /act.*now|limited.*time|expires.*today|hurry|act.*quickly/gi,
+            /click.*claim|click.*here|verify.*prize|confirm.*win/gi,
+            /reward.*waiting|prize.*waiting|bonus.*available|refund.*available/gi
+        ],
+        severity: 'medium',
+        explanation: 'This is a reward or prize scam designed to trick users into clicking malicious links or providing personal information. Legitimate rewards don\'t require upfront verification.'
+    },
+    businessEmailCompromise: {
+        name: 'Business Email Compromise',
+        icon: '🏢',
+        keywords: [
+            /from.*ceo|from.*manager|from.*director|behalf.*of.*executive/gi,
+            /urgent.*transfer|wire.*transfer.*urgent|immediate.*payment.*required/gi,
+            /confidential.*request|sensitive.*matter|urgent.*action.*required/gi,
+            /purchase.*order|invoice.*attached|payment.*details|banking.*transfer/gi,
+            /act.*discreetly|keep.*this.*confidential|do.*not.*disclose|do.*not.*mention/gi
+        ],
+        severity: 'high',
+        explanation: 'Business Email Compromise (BEC) attack impersonating a company executive to request financial transactions or sensitive information.'
+    },
+    socialEngineering: {
+        name: 'Social Engineering',
+        icon: '🎭',
+        keywords: [
+            /urgency|immediately|asap|right.*now|at.*once/gi,
+            /click.*link|click.*button|download.*file|open.*attachment/gi,
+            /rare.*opportunity|exclusive.*offer|limited.*availability/gi,
+            /verify.*now|confirm.*now|update.*now|install.*now/gi,
+            /fear.*based|act.*now|don't.*delay|don't.*miss.*out/gi
+        ],
+        severity: 'medium',
+        explanation: 'This email uses psychological manipulation tactics to trick users into taking specific actions without careful consideration.'
+    }
+};
+
+function classifyThreat(content) {
+    let highestScore = 0;
+    let classifiedThreat = 'Safe Email';
+    let selectedClassification = null;
+    const scores = {};
+
+    // Score each threat classification
+    for (const [key, threat] of Object.entries(threatClassifications)) {
+        let score = 0;
+        let matchCount = 0;
+
+        // Check each keyword pattern
+        for (const pattern of threat.keywords) {
+            const matches = content.match(pattern);
+            if (matches) {
+                matchCount += matches.length;
+            }
+        }
+
+        // Calculate confidence score (0-100)
+        // Base score on number of keyword matches
+        score = Math.min(matchCount * 15, 100);
+
+        // Boost score if multiple keywords match
+        if (matchCount > 1) {
+            score += Math.min(matchCount * 5, 20);
+        }
+
+        scores[key] = Math.min(score, 100);
+
+        // Track highest scoring threat
+        if (score > highestScore) {
+            highestScore = Math.min(score, 100);
+            classifiedThreat = threat.name;
+            selectedClassification = { key, ...threat, confidenceScore: highestScore };
+        }
+    }
+
+    // If no threat detected above 15% confidence, mark as safe
+    if (highestScore < 15) {
+        classifiedThreat = 'Safe Email';
+        selectedClassification = {
+            key: 'safe',
+            name: 'Safe Email',
+            icon: '✓',
+            severity: 'low',
+            confidenceScore: 100,
+            explanation: 'This email does not exhibit common phishing, scamming, or social engineering patterns. It appears to be legitimate.'
+        };
+    }
+
+    return {
+        classification: classifiedThreat,
+        confidenceScore: selectedClassification.confidenceScore,
+        severity: selectedClassification.severity,
+        explanation: selectedClassification.explanation,
+        allScores: scores,
+        fullResult: selectedClassification
+    };
+}
+
 // Threat Database
 const threatPatterns = {
     phishing: [
@@ -56,16 +219,50 @@ const recommendationsBase = {
     ]
 };
 
-// DOM Elements
-const emailForm = document.getElementById('emailForm');
-const emailContent = document.getElementById('emailContent');
-const resultsContainer = document.getElementById('resultsContainer');
-const riskCircle = document.getElementById('riskCircle');
-const riskPercentage = document.getElementById('riskPercentage');
-const riskBadge = document.getElementById('riskBadge');
-const riskDetails = document.getElementById('riskDetails');
-const threatsList = document.getElementById('threatsList');
-const recommendationsList = document.getElementById('recommendationsList');
+// DOM Elements - Initialize as null, will be set after DOM loads
+let emailForm = null;
+let emailContent = null;
+let resultsContainer = null;
+let riskCircle = null;
+let riskPercentage = null;
+let riskBadge = null;
+let riskDetails = null;
+let threatsList = null;
+let recommendationsList = null;
+
+// Initialize all DOM elements after page load
+function initializeDOMElements() {
+    dashboardElements.totalEmails = document.getElementById('totalEmails');
+    dashboardElements.highRiskCount = document.getElementById('highRiskCount');
+    dashboardElements.mediumRiskCount = document.getElementById('mediumRiskCount');
+    dashboardElements.safeCount = document.getElementById('safeCount');
+    dashboardElements.highRiskPercent = document.getElementById('highRiskPercent');
+    dashboardElements.mediumRiskPercent = document.getElementById('mediumRiskPercent');
+    dashboardElements.safePercent = document.getElementById('safePercent');
+
+    classificationElements.classificationType = document.getElementById('classificationType');
+    classificationElements.confidenceBar = document.getElementById('confidenceBar');
+    classificationElements.confidenceValue = document.getElementById('confidenceValue');
+    classificationElements.classificationExplanation = document.getElementById('classificationExplanation');
+
+    emailForm = document.getElementById('emailForm');
+    emailContent = document.getElementById('emailContent');
+    resultsContainer = document.getElementById('resultsContainer');
+    riskCircle = document.getElementById('riskCircle');
+    riskPercentage = document.getElementById('riskPercentage');
+    riskBadge = document.getElementById('riskBadge');
+    riskDetails = document.getElementById('riskDetails');
+    threatsList = document.getElementById('threatsList');
+    recommendationsList = document.getElementById('recommendationsList');
+
+    // Attach event listener
+    if (emailForm) {
+        emailForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            analyzeEmail();
+        });
+    }
+}
 
 // ============================================
 // MAIN ANALYSIS FUNCTION
@@ -165,6 +362,9 @@ function performThreatAnalysis(content) {
     // Final normalization
     totalScore = Math.min(totalScore, 100);
 
+    // Classify threat using the new engine
+    const classification = classifyThreat(content);
+
     return {
         score: totalScore,
         riskLevel: riskLevel,
@@ -174,7 +374,8 @@ function performThreatAnalysis(content) {
             emailCount,
             urgencyLevel: urgencyKeywords > 0 ? 'High' : 'Normal',
             contentLength: emailLength
-        }
+        },
+        classification: classification
     };
 }
 
@@ -183,7 +384,7 @@ function performThreatAnalysis(content) {
 // ============================================
 
 function displayResults(analysisResult) {
-    const { score, riskLevel, detectedThreats, analysis } = analysisResult;
+    const { score, riskLevel, detectedThreats, analysis, classification } = analysisResult;
 
     // Update Risk Score
     updateRiskScore(score, riskLevel);
@@ -208,8 +409,14 @@ function displayResults(analysisResult) {
     // Update Threats List
     updateThreatsList(detectedThreats, riskLevel);
 
+    // Update Threat Classification
+    updateThreatClassification(classification);
+
     // Update Recommendations
     updateRecommendations(riskLevel);
+
+    // Update Dashboard Statistics
+    updateDashboardStatistics(riskLevel);
 
     // Show results container
     resultsContainer.style.display = 'grid';
@@ -272,6 +479,124 @@ function updateRecommendations(riskLevel) {
         .join('');
 
     recommendationsList.innerHTML = recommendationsHTML;
+}
+
+// ============================================
+// THREAT CLASSIFICATION DISPLAY
+// ============================================
+
+function updateThreatClassification(classification) {
+    const { classification: threatType, confidenceScore, severity, explanation } = classification;
+
+    // Format threat type display
+    const classNames = threatType.toLowerCase().replace(/\s+/g, '-');
+    classificationElements.classificationType.textContent = threatType;
+    classificationElements.classificationType.className = `classification-type ${classNames}`;
+
+    // Animate confidence bar
+    const barTarget = confidenceScore;
+    animateProgressBar(classificationElements.confidenceBar, barTarget);
+
+    // Update confidence value
+    classificationElements.confidenceValue.textContent = Math.round(confidenceScore) + '%';
+
+    // Update explanation
+    classificationElements.classificationExplanation.textContent = explanation;
+
+    // Add color coding based on severity
+    const explanationBox = classificationElements.classificationExplanation;
+    if (severity === 'high') {
+        explanationBox.style.borderLeft = '3px solid var(--danger-color)';
+    } else if (severity === 'medium') {
+        explanationBox.style.borderLeft = '3px solid var(--warning-color)';
+    } else {
+        explanationBox.style.borderLeft = '3px solid var(--success-color)';
+    }
+}
+
+function animateProgressBar(element, targetPercentage) {
+    let currentWidth = 0;
+    const targetWidth = targetPercentage;
+    const increment = targetWidth / 30;
+
+    const interval = setInterval(() => {
+        currentWidth += increment;
+        if (currentWidth >= targetWidth) {
+            currentWidth = targetWidth;
+            clearInterval(interval);
+        }
+        element.style.width = currentWidth + '%';
+    }, 20);
+}
+
+// ============================================
+// DASHBOARD UPDATE FUNCTION
+// ============================================
+
+function updateDashboardStatistics(riskLevel) {
+    // Increment total emails
+    statistics.totalEmails += 1;
+
+    // Increment risk category count
+    if (riskLevel === 'high') {
+        statistics.highRiskCount += 1;
+    } else if (riskLevel === 'medium') {
+        statistics.mediumRiskCount += 1;
+    } else if (riskLevel === 'low') {
+        statistics.safeCount += 1;
+    }
+
+    // Save to localStorage
+    saveStatisticsToStorage();
+
+    // Calculate percentages
+    const total = statistics.totalEmails;
+    const highRiskPercent = total > 0 ? Math.round((statistics.highRiskCount / total) * 100) : 0;
+    const mediumRiskPercent = total > 0 ? Math.round((statistics.mediumRiskCount / total) * 100) : 0;
+    const safePercent = total > 0 ? Math.round((statistics.safeCount / total) * 100) : 0;
+
+    // Animate dashboard updates
+    animateDashboardNumber(dashboardElements.totalEmails, statistics.totalEmails);
+    animateDashboardNumber(dashboardElements.highRiskCount, statistics.highRiskCount);
+    animateDashboardNumber(dashboardElements.mediumRiskCount, statistics.mediumRiskCount);
+    animateDashboardNumber(dashboardElements.safeCount, statistics.safeCount);
+
+    // Update percentages
+    dashboardElements.highRiskPercent.textContent = highRiskPercent + '%';
+    dashboardElements.mediumRiskPercent.textContent = mediumRiskPercent + '%';
+    dashboardElements.safePercent.textContent = safePercent + '%';
+
+    // Update stat bar for total emails
+    const totalEmailsCard = dashboardElements.totalEmails.closest('.dashboard-card');
+    const statBar = totalEmailsCard.querySelector('.stat-bar');
+    if (statBar) {
+        const barWidth = Math.min((total / 100) * 100, 100);
+        statBar.style.width = barWidth + '%';
+    }
+
+    // Add pulse animation to updated cards
+    const cards = document.querySelectorAll('.dashboard-card');
+    cards.forEach((card, index) => {
+        card.style.animation = 'none';
+        setTimeout(() => {
+            card.style.animation = `cardPulse 0.6s ease-out`;
+        }, 10);
+    });
+}
+
+function animateDashboardNumber(element, targetValue) {
+    const currentValue = parseInt(element.textContent) || 0;
+    const increment = Math.ceil((targetValue - currentValue) / 10);
+    let displayValue = currentValue;
+
+    const counter = setInterval(() => {
+        displayValue += increment;
+        if (displayValue >= targetValue) {
+            displayValue = targetValue;
+            clearInterval(counter);
+        }
+        element.textContent = displayValue;
+    }, 30);
 }
 
 function animateResultCards() {
@@ -346,10 +671,7 @@ function showNotification(message, type = 'info') {
 // EVENT LISTENERS
 // ============================================
 
-emailForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    analyzeEmail();
-});
+// Event listeners are attached in initializeDOMElements() after DOM is loaded
 
 // Add keyboard shortcut
 document.addEventListener('keydown', (e) => {
@@ -411,6 +733,68 @@ Best regards,
 Security Team`
 };
 
+// Load statistics from localStorage
+function loadStatisticsFromStorage() {
+    const stored = localStorage.getItem('guardmailStatistics');
+    if (stored) {
+        const data = JSON.parse(stored);
+        statistics.totalEmails = data.totalEmails || 0;
+        statistics.highRiskCount = data.highRiskCount || 0;
+        statistics.mediumRiskCount = data.mediumRiskCount || 0;
+        statistics.safeCount = data.safeCount || 0;
+    }
+}
+
+// Save statistics to localStorage
+function saveStatisticsToStorage() {
+    localStorage.setItem('guardmailStatistics', JSON.stringify(statistics));
+}
+
+// Initialize dashboard display
+function initializeDashboard() {
+    loadStatisticsFromStorage();
+    
+    // Update dashboard elements
+    if (dashboardElements.totalEmails) {
+        dashboardElements.totalEmails.textContent = statistics.totalEmails;
+    }
+    if (dashboardElements.highRiskCount) {
+        dashboardElements.highRiskCount.textContent = statistics.highRiskCount;
+    }
+    if (dashboardElements.mediumRiskCount) {
+        dashboardElements.mediumRiskCount.textContent = statistics.mediumRiskCount;
+    }
+    if (dashboardElements.safeCount) {
+        dashboardElements.safeCount.textContent = statistics.safeCount;
+    }
+
+    // Calculate and update percentages
+    const total = statistics.totalEmails;
+    if (total > 0) {
+        const highRiskPercent = Math.round((statistics.highRiskCount / total) * 100);
+        const mediumRiskPercent = Math.round((statistics.mediumRiskCount / total) * 100);
+        const safePercent = Math.round((statistics.safeCount / total) * 100);
+
+        if (dashboardElements.highRiskPercent) {
+            dashboardElements.highRiskPercent.textContent = highRiskPercent + '%';
+        }
+        if (dashboardElements.mediumRiskPercent) {
+            dashboardElements.mediumRiskPercent.textContent = mediumRiskPercent + '%';
+        }
+        if (dashboardElements.safePercent) {
+            dashboardElements.safePercent.textContent = safePercent + '%';
+        }
+
+        // Update stat bar
+        const totalEmailsCard = document.querySelector('#totalEmails').closest('.dashboard-card');
+        const statBar = totalEmailsCard.querySelector('.stat-bar');
+        if (statBar) {
+            const barWidth = Math.min((total / 100) * 100, 100);
+            statBar.style.width = barWidth + '%';
+        }
+    }
+}
+
 // Add demo functionality
 window.loadSampleEmail = function(type) {
     emailContent.value = sampleEmails[type] || '';
@@ -422,6 +806,8 @@ window.loadSampleEmail = function(type) {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('GuardMail AI - Email Threat Analyzer initialized');
     console.log('Features: Advanced phishing detection, malware analysis, and security recommendations');
+    initializeDOMElements();
+    initializeDashboard();
 });
 
 // Add slideOutDown animation to stylesheet
